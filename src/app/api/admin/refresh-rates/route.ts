@@ -22,7 +22,7 @@ function isAuthorized(request: NextRequest): boolean {
   return false;
 }
 
-export async function POST(request: NextRequest) {
+async function handleRefresh(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 });
   }
@@ -73,4 +73,14 @@ export async function POST(request: NextRequest) {
       await browser.close().catch(() => {});
     }
   }
+}
+
+// Vercel Cron sends GET requests
+export async function GET(request: NextRequest) {
+  return handleRefresh(request);
+}
+
+// Manual trigger via POST (curl, Postman, etc.)
+export async function POST(request: NextRequest) {
+  return handleRefresh(request);
 }

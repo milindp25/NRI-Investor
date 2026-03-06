@@ -6,8 +6,32 @@
   },
   "crons": [
     {
-      "path": "/api/admin/refresh-rates",
+      "path": "/api/admin/refresh-rates?type=us-treasury",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/admin/refresh-rates?type=us-cd",
+      "schedule": "2 6 * * *"
+    },
+    {
+      "path": "/api/admin/refresh-rates?type=us-hysa",
+      "schedule": "4 6 * * *"
+    },
+    {
+      "path": "/api/admin/refresh-rates?type=us-money-market",
+      "schedule": "6 6 * * *"
+    },
+    {
+      "path": "/api/admin/refresh-rates?type=india-fd",
+      "schedule": "8 6 * * *"
+    },
+    {
+      "path": "/api/admin/refresh-rates?type=india-nbfc",
+      "schedule": "10 6 * * *"
+    },
+    {
+      "path": "/api/admin/refresh-rates?type=india-govt",
+      "schedule": "12 6 * * *"
     }
   ]
 }
