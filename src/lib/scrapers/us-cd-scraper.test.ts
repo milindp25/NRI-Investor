@@ -194,7 +194,7 @@ describe('scrapeUSCD', () => {
           tenures: expect.arrayContaining([expect.objectContaining({ months: 12, apy: 4.5 })]),
         }),
       ]),
-      5,
+      2,
       'institutionId',
     );
   });

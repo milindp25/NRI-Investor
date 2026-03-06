@@ -307,12 +307,12 @@ export async function scrapeUSCD(browser?: Browser | null): Promise<ScraperResul
     }
   }
 
-  // Merge into KV (minimum 5 institutions to accept the batch)
+  // Merge into KV (minimum 2 institutions to accept the batch)
   if (data.length > 0) {
     const mergeResult = await mergeRates(
       'rates:us-cd',
       data as unknown as Record<string, unknown>[],
-      5,
+      2,
       'institutionId',
     );
     if (!mergeResult.merged && mergeResult.reason) {

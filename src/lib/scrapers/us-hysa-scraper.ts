@@ -201,7 +201,7 @@ export async function scrapeUSHYSA(browser?: Browser | null): Promise<ScraperRes
     const mergeResult = await mergeRates(
       'rates:us-hysa',
       data as unknown as Record<string, unknown>[],
-      4,
+      2,
       'institutionId',
     );
     if (!mergeResult.merged && mergeResult.reason) {

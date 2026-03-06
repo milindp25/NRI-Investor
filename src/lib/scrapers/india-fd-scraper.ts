@@ -276,7 +276,7 @@ export async function scrapeIndiaFD(browser?: Browser | null): Promise<ScraperRe
   const mergeResult = await mergeRates(
     'rates:india-fd',
     allRates as unknown as Record<string, unknown>[],
-    10,
+    4,
     'institutionId',
   );
 

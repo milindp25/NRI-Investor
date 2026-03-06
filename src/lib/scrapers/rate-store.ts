@@ -50,6 +50,12 @@ function isBlobConfigured(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN;
 }
 
+/** Auth headers for private blob store reads. */
+function blobAuthHeaders(): HeadersInit {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 /**
  * Find a blob by its pathname prefix and fetch its JSON content.
  */
@@ -58,7 +64,7 @@ async function fetchBlob<T>(path: string): Promise<T[] | null> {
     const { blobs } = await list({ prefix: path, limit: 1 });
     if (blobs.length === 0) return null;
 
-    const res = await fetch(blobs[0].downloadUrl);
+    const res = await fetch(blobs[0].downloadUrl, { headers: blobAuthHeaders() });
     if (!res.ok) return null;
 
     const data = await res.json();
@@ -100,6 +106,7 @@ export async function setRates<T>(key: RateKVKey, data: T[]): Promise<boolean> {
     await put(BLOB_PATH[key], JSON.stringify(data), {
       access: 'private',
       addRandomSuffix: false,
+      allowOverwrite: true,
       contentType: 'application/json',
     });
     return true;
@@ -165,6 +172,7 @@ export async function getAllRates(): Promise<AllRatesResult> {
     const { blobs } = await list({ prefix: 'rates/' });
     const blobMap = new Map(blobs.map((b) => [b.pathname, b.downloadUrl]));
 
+    const headers = blobAuthHeaders();
     const fetchOrFallback = async <T>(key: RateKVKey): Promise<T[]> => {
       const url = blobMap.get(BLOB_PATH[key]);
       if (!url) {
@@ -172,7 +180,7 @@ export async function getAllRates(): Promise<AllRatesResult> {
         return (STATIC_FALLBACK[key] ?? []) as T[];
       }
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { headers });
         if (!res.ok) {
           sources[key] = 'static';
           return (STATIC_FALLBACK[key] ?? []) as T[];

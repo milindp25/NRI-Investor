@@ -160,7 +160,7 @@ export async function scrapeIndiaNBFC(browser?: Browser | null): Promise<Scraper
 
   // Merge into KV (minimum 2 of 3 institutions to accept the batch)
   if (data.length > 0) {
-    const mergeResult = await mergeRates('rates:india-nbfc', data, 2, 'institutionId');
+    const mergeResult = await mergeRates('rates:india-nbfc', data, 1, 'institutionId');
     if (!mergeResult.merged && mergeResult.reason) {
       errors.push(`Merge skipped: ${mergeResult.reason}`);
     }

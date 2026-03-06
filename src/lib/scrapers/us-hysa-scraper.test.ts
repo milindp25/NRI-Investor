@@ -151,7 +151,7 @@ describe('scrapeUSHYSA', () => {
       expect.arrayContaining([
         expect.objectContaining({ institutionId: expect.any(String), apy: 4.25 }),
       ]),
-      4,
+      2,
       'institutionId',
     );
   });

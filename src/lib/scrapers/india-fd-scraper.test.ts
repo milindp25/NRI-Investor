@@ -346,7 +346,7 @@ describe('scrapeIndiaFD', () => {
     expect(mockedMergeRates).toHaveBeenCalledWith(
       'rates:india-fd',
       expect.any(Array),
-      10,
+      4,
       'institutionId',
     );
 
