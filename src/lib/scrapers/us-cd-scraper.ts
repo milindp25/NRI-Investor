@@ -261,7 +261,7 @@ function extractCDRates(
 
 async function scrapeOne(config: CDConfig, browser: Browser): Promise<USCDRate> {
   const $ = await fetchHtmlWithBrowser(browser, config.url, {
-    waitMs: 4000,
+    waitMs: 2000,
   });
   const tenures = extractCDRates($, config.tableSelectors);
 
@@ -295,15 +295,22 @@ export async function scrapeUSCD(browser?: Browser | null): Promise<ScraperResul
   const errors: string[] = [];
   const data: USCDRate[] = [];
 
-  const results = await Promise.allSettled(CD_CONFIGS.map((config) => scrapeOne(config, browser)));
+  // Process banks in batches of 3 to avoid exhausting memory with 7 concurrent
+  // Chromium tabs on Vercel's 1.5GB serverless functions.
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < CD_CONFIGS.length; i += BATCH_SIZE) {
+    const batch = CD_CONFIGS.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(batch.map((config) => scrapeOne(config, browser)));
 
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    if (result.status === 'fulfilled') {
-      data.push(result.value);
-    } else {
-      const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
-      errors.push(`${CD_CONFIGS[i].institution}: ${reason}`);
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j];
+      if (result.status === 'fulfilled') {
+        data.push(result.value);
+      } else {
+        const reason =
+          result.reason instanceof Error ? result.reason.message : String(result.reason);
+        errors.push(`${batch[j].institution}: ${reason}`);
+      }
     }
   }
 

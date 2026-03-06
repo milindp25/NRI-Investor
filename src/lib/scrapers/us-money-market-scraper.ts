@@ -98,7 +98,7 @@ interface FundScrapeResult {
 async function scrapeFund(config: MoneyMarketConfig, browser: Browser): Promise<FundScrapeResult> {
   try {
     const $ = await fetchHtmlWithBrowser(browser, config.url, {
-      waitMs: 4000,
+      waitMs: 2000,
     });
     const yieldValue = extract7DayYield($);
 
