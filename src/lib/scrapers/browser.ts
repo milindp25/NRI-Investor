@@ -77,14 +77,17 @@ export async function fetchHtmlWithBrowser(
       });
     }
 
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 });
+    // Use 'domcontentloaded' instead of 'networkidle2' — SPA sites with
+    // WebSockets, analytics, and long-polling never reach network-idle,
+    // causing universal 20s timeouts on Vercel.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
     if (waitForSelector) {
       await page.waitForSelector(waitForSelector, { timeout: 10000 }).catch(() => {
         // Selector not found — proceed with whatever loaded
       });
     } else {
-      // Default wait for content to render
+      // Wait for JS to render dynamic content after DOM is parsed
       await new Promise((r) => setTimeout(r, waitMs));
     }
 
