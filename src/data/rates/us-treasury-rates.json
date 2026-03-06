@@ -1,0 +1,56 @@
+[
+  {
+    "type": "T-Bill",
+    "term": "4-week",
+    "yield": 4.22,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "T-Bill",
+    "term": "13-week",
+    "yield": 4.25,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "T-Bill",
+    "term": "26-week",
+    "yield": 4.19,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "T-Bill",
+    "term": "52-week",
+    "yield": 4.01,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "T-Note",
+    "term": "2-year",
+    "yield": 3.99,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "T-Note",
+    "term": "5-year",
+    "yield": 4.02,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "T-Note",
+    "term": "10-year",
+    "yield": 4.25,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "I-Bond",
+    "term": "composite",
+    "yield": 3.11,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "type": "TIPS",
+    "term": "5-year",
+    "yield": 1.85,
+    "lastUpdated": "2026-03-05"
+  }
+]

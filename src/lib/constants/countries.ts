@@ -1,0 +1,76 @@
+import type { CountryMeta, SupportedCountry } from '@/types/country';
+
+export const SUPPORTED_COUNTRIES: Record<SupportedCountry, CountryMeta> = {
+  US: {
+    code: 'US',
+    name: 'United States',
+    currency: 'USD',
+    currencySymbol: '$',
+    flagEmoji: '\u{1F1FA}\u{1F1F8}',
+    hasDTAA: true,
+    taxYearStart: 'January',
+  },
+  UK: {
+    code: 'UK',
+    name: 'United Kingdom',
+    currency: 'GBP',
+    currencySymbol: '\u00A3',
+    flagEmoji: '\u{1F1EC}\u{1F1E7}',
+    hasDTAA: true,
+    taxYearStart: 'April',
+  },
+  CA: {
+    code: 'CA',
+    name: 'Canada',
+    currency: 'CAD',
+    currencySymbol: 'C$',
+    flagEmoji: '\u{1F1E8}\u{1F1E6}',
+    hasDTAA: true,
+    taxYearStart: 'January',
+  },
+  AU: {
+    code: 'AU',
+    name: 'Australia',
+    currency: 'AUD',
+    currencySymbol: 'A$',
+    flagEmoji: '\u{1F1E6}\u{1F1FA}',
+    hasDTAA: true,
+    taxYearStart: 'July',
+  },
+  SG: {
+    code: 'SG',
+    name: 'Singapore',
+    currency: 'SGD',
+    currencySymbol: 'S$',
+    flagEmoji: '\u{1F1F8}\u{1F1EC}',
+    hasDTAA: true,
+    taxYearStart: 'January',
+  },
+  AE: {
+    code: 'AE',
+    name: 'UAE',
+    currency: 'AED',
+    currencySymbol: '\u062F.\u0625',
+    flagEmoji: '\u{1F1E6}\u{1F1EA}',
+    hasDTAA: true,
+    taxYearStart: 'January',
+  },
+  DE: {
+    code: 'DE',
+    name: 'Germany',
+    currency: 'EUR',
+    currencySymbol: '\u20AC',
+    flagEmoji: '\u{1F1E9}\u{1F1EA}',
+    hasDTAA: true,
+    taxYearStart: 'January',
+  },
+};
+
+export const INDIA_META = {
+  code: 'IN' as const,
+  name: 'India',
+  currency: 'INR',
+  currencySymbol: '\u20B9',
+  flagEmoji: '\u{1F1EE}\u{1F1F3}',
+  taxYearStart: 'April',
+};

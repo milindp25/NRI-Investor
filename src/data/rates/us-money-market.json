@@ -1,0 +1,29 @@
+[
+  {
+    "fund": "Vanguard Federal Money Market Fund",
+    "fundId": "vmfxx",
+    "provider": "Vanguard",
+    "sevenDayYield": 4.24,
+    "minInvestment": 3000,
+    "expenseRatio": 0.11,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "fund": "Fidelity Government Money Market Fund",
+    "fundId": "spaxx",
+    "provider": "Fidelity",
+    "sevenDayYield": 4.21,
+    "minInvestment": 0,
+    "expenseRatio": 0.42,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "fund": "Schwab Value Advantage Money Fund",
+    "fundId": "swvxx",
+    "provider": "Charles Schwab",
+    "sevenDayYield": 4.22,
+    "minInvestment": 0,
+    "expenseRatio": 0.34,
+    "lastUpdated": "2026-03-05"
+  }
+]
