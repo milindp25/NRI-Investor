@@ -1,0 +1,88 @@
+[
+  {
+    "institution": "Ally Bank",
+    "institutionId": "ally-bank",
+    "tenures": [
+      { "months": 6, "apy": 4.0 },
+      { "months": 12, "apy": 4.1 },
+      { "months": 24, "apy": 3.75 },
+      { "months": 36, "apy": 3.7 },
+      { "months": 60, "apy": 3.5 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Marcus by Goldman Sachs",
+    "institutionId": "marcus-goldman-sachs",
+    "tenures": [
+      { "months": 6, "apy": 4.1 },
+      { "months": 12, "apy": 4.25 },
+      { "months": 24, "apy": 3.8 },
+      { "months": 36, "apy": 3.7 },
+      { "months": 60, "apy": 3.5 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Capital One",
+    "institutionId": "capital-one",
+    "tenures": [
+      { "months": 6, "apy": 3.9 },
+      { "months": 12, "apy": 4.0 },
+      { "months": 24, "apy": 3.75 },
+      { "months": 60, "apy": 3.5 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Discover Bank",
+    "institutionId": "discover-bank",
+    "tenures": [
+      { "months": 6, "apy": 4.0 },
+      { "months": 12, "apy": 4.1 },
+      { "months": 24, "apy": 3.8 },
+      { "months": 60, "apy": 3.6 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Synchrony Bank",
+    "institutionId": "synchrony-bank",
+    "tenures": [
+      { "months": 6, "apy": 4.1 },
+      { "months": 12, "apy": 4.3 },
+      { "months": 24, "apy": 3.85 },
+      { "months": 60, "apy": 3.55 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Bread Financial",
+    "institutionId": "bread-financial",
+    "tenures": [
+      { "months": 6, "apy": 4.15 },
+      { "months": 12, "apy": 4.25 },
+      { "months": 24, "apy": 3.8 },
+      { "months": 60, "apy": 3.55 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Barclays",
+    "institutionId": "barclays",
+    "tenures": [
+      { "months": 6, "apy": 4.0 },
+      { "months": 12, "apy": 4.15 },
+      { "months": 24, "apy": 3.8 },
+      { "months": 60, "apy": 3.5 }
+    ],
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  }
+]

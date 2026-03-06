@@ -1,0 +1,41 @@
+[
+  {
+    "institution": "Bajaj Finance",
+    "institutionId": "bajaj-finance",
+    "tenures": [
+      { "months": 12, "rate": 7.4 },
+      { "months": 24, "rate": 7.5 },
+      { "months": 36, "rate": 7.6 },
+      { "months": 60, "rate": 7.35 }
+    ],
+    "creditRating": "AAA",
+    "minDeposit": 15000,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Mahindra Finance",
+    "institutionId": "mahindra-finance",
+    "tenures": [
+      { "months": 12, "rate": 7.5 },
+      { "months": 24, "rate": 7.7 },
+      { "months": 36, "rate": 7.75 },
+      { "months": 60, "rate": 7.4 }
+    ],
+    "creditRating": "AAA",
+    "minDeposit": 5000,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Shriram Finance",
+    "institutionId": "shriram-finance",
+    "tenures": [
+      { "months": 12, "rate": 7.6 },
+      { "months": 24, "rate": 7.8 },
+      { "months": 36, "rate": 8.09 },
+      { "months": 60, "rate": 7.55 }
+    ],
+    "creditRating": "AA+",
+    "minDeposit": 5000,
+    "lastUpdated": "2026-03-05"
+  }
+]

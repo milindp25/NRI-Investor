@@ -1,0 +1,79 @@
+[
+  {
+    "country": "US",
+    "interestIncome": { "withDTAA": 15, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 25, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-US DTAA is most beneficial for interest income (15% vs 30%). Capital gains and rental income rates remain same under treaty."
+  },
+  {
+    "country": "UK",
+    "interestIncome": { "withDTAA": 15, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 15, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-UK DTAA reduces interest TDS to 15% and dividend TDS to 15%."
+  },
+  {
+    "country": "CA",
+    "interestIncome": { "withDTAA": 15, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 25, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-Canada DTAA reduces interest TDS to 15%. Dividend rate at 25% is higher than default 20%."
+  },
+  {
+    "country": "AU",
+    "interestIncome": { "withDTAA": 15, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 15, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-Australia DTAA reduces interest to 15% and dividends to 15%."
+  },
+  {
+    "country": "SG",
+    "interestIncome": { "withDTAA": 15, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 15, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-Singapore DTAA has Limitation of Benefits (LOB) clause. TRC is essential."
+  },
+  {
+    "country": "AE",
+    "interestIncome": { "withDTAA": 12.5, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 10, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-UAE DTAA offers the best interest rate reduction (12.5%). UAE has no personal income tax, so foreign tax credit may not apply."
+  },
+  {
+    "country": "DE",
+    "interestIncome": { "withDTAA": 10, "withoutDTAA": 30 },
+    "dividendIncome": { "withDTAA": 10, "withoutDTAA": 20 },
+    "capitalGains": {
+      "shortTerm": { "withDTAA": 30, "withoutDTAA": 30 },
+      "longTerm": { "withDTAA": 20, "withoutDTAA": 20 }
+    },
+    "rentalIncome": { "withDTAA": 30, "withoutDTAA": 30 },
+    "notes": "India-Germany DTAA offers the lowest interest TDS at 10%. Germany NRIs benefit the most from DTAA on interest income."
+  }
+]

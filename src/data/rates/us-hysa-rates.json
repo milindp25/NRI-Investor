@@ -1,0 +1,50 @@
+[
+  {
+    "institution": "Ally Bank",
+    "institutionId": "ally-bank",
+    "apy": 4.0,
+    "minBalance": 0,
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Marcus by Goldman Sachs",
+    "institutionId": "marcus-goldman-sachs",
+    "apy": 3.9,
+    "minBalance": 0,
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Wealthfront",
+    "institutionId": "wealthfront",
+    "apy": 4.0,
+    "minBalance": 0,
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "SoFi",
+    "institutionId": "sofi",
+    "apy": 3.8,
+    "minBalance": 0,
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Discover Bank",
+    "institutionId": "discover-bank",
+    "apy": 3.75,
+    "minBalance": 0,
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Betterment",
+    "institutionId": "betterment",
+    "apy": 3.75,
+    "minBalance": 0,
+    "fdicInsured": true,
+    "lastUpdated": "2026-03-05"
+  }
+]

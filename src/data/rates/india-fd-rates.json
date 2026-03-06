@@ -1,0 +1,242 @@
+[
+  {
+    "institution": "State Bank of India",
+    "institutionId": "sbi",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.8 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.75 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "State Bank of India",
+    "institutionId": "sbi",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.8 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.75 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "HDFC Bank",
+    "institutionId": "hdfc-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.6 },
+      { "months": 24, "rate": 7.1 },
+      { "months": 36, "rate": 7.0 },
+      { "months": 60, "rate": 6.6 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "HDFC Bank",
+    "institutionId": "hdfc-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.6 },
+      { "months": 24, "rate": 7.1 },
+      { "months": 36, "rate": 7.0 },
+      { "months": 60, "rate": 6.6 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "ICICI Bank",
+    "institutionId": "icici-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.7 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.9 },
+      { "months": 60, "rate": 6.6 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "ICICI Bank",
+    "institutionId": "icici-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.7 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.9 },
+      { "months": 60, "rate": 6.6 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Axis Bank",
+    "institutionId": "axis-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.7 },
+      { "months": 24, "rate": 7.1 },
+      { "months": 36, "rate": 7.1 },
+      { "months": 60, "rate": 6.75 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Axis Bank",
+    "institutionId": "axis-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.7 },
+      { "months": 24, "rate": 7.1 },
+      { "months": 36, "rate": 7.1 },
+      { "months": 60, "rate": 6.75 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Kotak Mahindra Bank",
+    "institutionId": "kotak-mahindra-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.5 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 7.0 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Kotak Mahindra Bank",
+    "institutionId": "kotak-mahindra-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.5 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 7.0 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Punjab National Bank",
+    "institutionId": "pnb",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.8 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.75 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Punjab National Bank",
+    "institutionId": "pnb",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.8 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.75 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Bank of Baroda",
+    "institutionId": "bank-of-baroda",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.85 },
+      { "months": 24, "rate": 7.05 },
+      { "months": 36, "rate": 6.8 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Bank of Baroda",
+    "institutionId": "bank-of-baroda",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.85 },
+      { "months": 24, "rate": 7.05 },
+      { "months": 36, "rate": 6.8 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Canara Bank",
+    "institutionId": "canara-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 6.85 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.8 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Canara Bank",
+    "institutionId": "canara-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 6.85 },
+      { "months": 24, "rate": 7.0 },
+      { "months": 36, "rate": 6.8 },
+      { "months": 60, "rate": 6.5 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "IndusInd Bank",
+    "institutionId": "indusind-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 7.25 },
+      { "months": 24, "rate": 7.25 },
+      { "months": 36, "rate": 7.5 },
+      { "months": 60, "rate": 7.25 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "IndusInd Bank",
+    "institutionId": "indusind-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 7.25 },
+      { "months": 24, "rate": 7.25 },
+      { "months": 36, "rate": 7.5 },
+      { "months": 60, "rate": 7.25 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Yes Bank",
+    "institutionId": "yes-bank",
+    "accountType": "NRE",
+    "tenures": [
+      { "months": 12, "rate": 7.25 },
+      { "months": 24, "rate": 7.5 },
+      { "months": 36, "rate": 7.25 },
+      { "months": 60, "rate": 7.0 }
+    ],
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "institution": "Yes Bank",
+    "institutionId": "yes-bank",
+    "accountType": "NRO",
+    "tenures": [
+      { "months": 12, "rate": 7.25 },
+      { "months": 24, "rate": 7.5 },
+      { "months": 36, "rate": 7.25 },
+      { "months": 60, "rate": 7.0 }
+    ],
+    "lastUpdated": "2026-03-05"
+  }
+]

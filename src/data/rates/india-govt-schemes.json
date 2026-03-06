@@ -1,0 +1,51 @@
+[
+  {
+    "schemeName": "RBI Floating Rate Savings Bonds",
+    "schemeId": "rbi-floating-rate-bonds",
+    "currentRate": 8.05,
+    "rateType": "floating",
+    "minTenureMonths": 84,
+    "maxTenureMonths": 84,
+    "minInvestment": 1000,
+    "nriEligible": false,
+    "taxFree": false,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "schemeName": "Post Office Fixed Deposit",
+    "schemeId": "post-office-fd",
+    "currentRate": 7.5,
+    "rateType": "fixed",
+    "minTenureMonths": 12,
+    "maxTenureMonths": 60,
+    "minInvestment": 1000,
+    "nriEligible": false,
+    "taxFree": false,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "schemeName": "National Savings Certificate (NSC)",
+    "schemeId": "nsc",
+    "currentRate": 7.7,
+    "rateType": "fixed",
+    "minTenureMonths": 60,
+    "maxTenureMonths": 60,
+    "minInvestment": 1000,
+    "nriEligible": false,
+    "taxFree": false,
+    "lastUpdated": "2026-03-05"
+  },
+  {
+    "schemeName": "Senior Citizens Savings Scheme (SCSS)",
+    "schemeId": "scss",
+    "currentRate": 8.2,
+    "rateType": "fixed",
+    "minTenureMonths": 60,
+    "maxTenureMonths": 60,
+    "minInvestment": 1000,
+    "maxInvestment": 3000000,
+    "nriEligible": false,
+    "taxFree": false,
+    "lastUpdated": "2026-03-05"
+  }
+]
