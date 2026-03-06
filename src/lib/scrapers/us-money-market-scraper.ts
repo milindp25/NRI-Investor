@@ -1,7 +1,9 @@
 import type { ScraperResult } from './types';
 import type { USMoneyMarketRate } from '@/types';
-import { fetchHtml, parseRate, isReasonableRate, todayISO } from './utils';
+import { parseRate, isReasonableRate, todayISO } from './utils';
 import { setRates, getRates } from './rate-store';
+import type { Browser } from './browser';
+import { fetchHtmlWithBrowser } from './browser';
 
 // ---------------------------------------------------------------------------
 // Fund configuration
@@ -49,10 +51,6 @@ const FUND_CONFIGS: MoneyMarketConfig[] = [
 
 /**
  * Extract the 7-day yield from a fund page.
- *
- * Strategy:
- * 1. Look for text containing "7-day" or "7-Day" and extract the nearby percentage.
- * 2. Fallback: scan all text for a percentage pattern near "7-day" or "yield".
  */
 function extract7DayYield($: ReturnType<typeof import('cheerio').load>): number | null {
   const bodyText = $('body').text();
@@ -97,9 +95,11 @@ interface FundScrapeResult {
   error: string | null;
 }
 
-async function scrapeFund(config: MoneyMarketConfig): Promise<FundScrapeResult> {
+async function scrapeFund(config: MoneyMarketConfig, browser: Browser): Promise<FundScrapeResult> {
   try {
-    const $ = await fetchHtml(config.url);
+    const $ = await fetchHtmlWithBrowser(browser, config.url, {
+      waitMs: 4000,
+    });
     const yieldValue = extract7DayYield($);
 
     if (yieldValue === null) {
@@ -141,10 +141,24 @@ async function scrapeFund(config: MoneyMarketConfig): Promise<FundScrapeResult> 
 // Main scraper
 // ---------------------------------------------------------------------------
 
-export async function scrapeUSMoneyMarket(): Promise<ScraperResult<USMoneyMarketRate>> {
+export async function scrapeUSMoneyMarket(
+  browser?: Browser | null,
+): Promise<ScraperResult<USMoneyMarketRate>> {
+  if (!browser) {
+    return {
+      success: false,
+      data: [],
+      errors: ['Browser instance required for US Money Market scraper (all fund sites are SPAs)'],
+      scrapedAt: new Date().toISOString(),
+      source: 'us-money-market',
+    };
+  }
+
   const errors: string[] = [];
 
-  const results = await Promise.allSettled(FUND_CONFIGS.map((config) => scrapeFund(config)));
+  const results = await Promise.allSettled(
+    FUND_CONFIGS.map((config) => scrapeFund(config, browser)),
+  );
 
   const rates: USMoneyMarketRate[] = [];
 

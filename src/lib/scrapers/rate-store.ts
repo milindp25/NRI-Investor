@@ -140,13 +140,24 @@ export async function mergeRates<T extends Record<string, any>>(
   return { merged: written };
 }
 
+export interface AllRatesResult {
+  directory: RateDirectory;
+  sources: Partial<Record<RateKVKey, 'blob' | 'static'>>;
+}
+
 /**
  * Get all rates as a RateDirectory (for the /api/rates route).
  * Uses a single blob list call + parallel fetches for efficiency.
+ * Returns source info per key (blob vs static fallback).
  */
-export async function getAllRates(): Promise<RateDirectory> {
+export async function getAllRates(): Promise<AllRatesResult> {
+  const sources: Partial<Record<RateKVKey, 'blob' | 'static'>> = {};
+
   if (!isBlobConfigured()) {
-    return staticDirectory();
+    for (const key of Object.keys(BLOB_PATH) as RateKVKey[]) {
+      sources[key] = 'static';
+    }
+    return { directory: staticDirectory(), sources };
   }
 
   try {
@@ -156,15 +167,25 @@ export async function getAllRates(): Promise<RateDirectory> {
 
     const fetchOrFallback = async <T>(key: RateKVKey): Promise<T[]> => {
       const url = blobMap.get(BLOB_PATH[key]);
-      if (!url) return (STATIC_FALLBACK[key] ?? []) as T[];
+      if (!url) {
+        sources[key] = 'static';
+        return (STATIC_FALLBACK[key] ?? []) as T[];
+      }
       try {
         const res = await fetch(url);
-        if (!res.ok) return (STATIC_FALLBACK[key] ?? []) as T[];
+        if (!res.ok) {
+          sources[key] = 'static';
+          return (STATIC_FALLBACK[key] ?? []) as T[];
+        }
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) return data as T[];
+        if (Array.isArray(data) && data.length > 0) {
+          sources[key] = 'blob';
+          return data as T[];
+        }
       } catch {
         // fall through to static
       }
+      sources[key] = 'static';
       return (STATIC_FALLBACK[key] ?? []) as T[];
     };
 
@@ -180,17 +201,23 @@ export async function getAllRates(): Promise<RateDirectory> {
       ]);
 
     return {
-      indiaFDRates: indiaFD,
-      indiaNBFCRates: indiaNBFC,
-      indiaGovtSchemes: indiaGovt,
-      usCDRates: usCD,
-      usHYSARates: usHYSA,
-      usTreasuryRates: usTreasury,
-      usMoneyMarketRates: usMoneyMarket,
+      directory: {
+        indiaFDRates: indiaFD,
+        indiaNBFCRates: indiaNBFC,
+        indiaGovtSchemes: indiaGovt,
+        usCDRates: usCD,
+        usHYSARates: usHYSA,
+        usTreasuryRates: usTreasury,
+        usMoneyMarketRates: usMoneyMarket,
+      },
+      sources,
     };
   } catch (err) {
     console.error('Blob getAllRates error:', err);
-    return staticDirectory();
+    for (const key of Object.keys(BLOB_PATH) as RateKVKey[]) {
+      sources[key] = 'static';
+    }
+    return { directory: staticDirectory(), sources };
   }
 }
 

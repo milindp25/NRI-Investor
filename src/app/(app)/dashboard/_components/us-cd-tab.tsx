@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { USCDRate, USHYSARate } from '@/types';
-import usCdRatesData from '@/data/rates/us-cd-rates.json';
-import usHysaRatesData from '@/data/rates/us-hysa-rates.json';
-
-const usCdRates = usCdRatesData as USCDRate[];
-const usHysaRates = usHysaRatesData as USHYSARate[];
+import { useRates } from '@/lib/hooks/use-rates';
 
 type SubTab = 'cd' | 'hysa';
 
@@ -49,10 +44,20 @@ function RatingBadge({ rating }: { rating: 'best' | 'good' | 'avg' }) {
 }
 
 export function USCDTab() {
+  const { rates, isLoading } = useRates();
+  const usCdRates = rates?.usCDRates ?? [];
+  const usHysaRates = rates?.usHYSARates ?? [];
+
   const [subTab, setSubTab] = useState<SubTab>('cd');
   const [amount, setAmount] = useState(10000);
   const [selectedTermMonths, setSelectedTermMonths] = useState(12);
-  const [selectedInstitution, setSelectedInstitution] = useState(usCdRates[0]?.institutionId || '');
+  const [selectedInstitutionRaw, setSelectedInstitution] = useState('');
+
+  // Auto-resolve: use selected if valid, else first available
+  const selectedInstitution = useMemo(() => {
+    const exists = usCdRates.find((r) => r.institutionId === selectedInstitutionRaw);
+    return exists ? selectedInstitutionRaw : usCdRates[0]?.institutionId || '';
+  }, [usCdRates, selectedInstitutionRaw]);
 
   // CD calculations
   const cdResults = useMemo(() => {
@@ -66,7 +71,7 @@ export function USCDTab() {
     const interest = maturity - amount;
 
     return { maturity, interest, apy, institution: bank?.institution || '' };
-  }, [subTab, amount, selectedTermMonths, selectedInstitution]);
+  }, [subTab, amount, selectedTermMonths, selectedInstitution, usCdRates]);
 
   // CD comparison table
   const cdComparison = useMemo(() => {
@@ -96,7 +101,7 @@ export function USCDTab() {
     rows.sort((a, b) => b.apy - a.apy);
     const bestApy = rows[0]?.apy || 0;
     return rows.map((r) => ({ ...r, rating: getRating(r.apy, bestApy) }));
-  }, [amount, selectedTermMonths]);
+  }, [amount, selectedTermMonths, usCdRates]);
 
   // CD projection breakdown
   const cdProjection = useMemo(() => {
@@ -159,7 +164,7 @@ export function USCDTab() {
 
   // HYSA calculations
   const hysaResults = useMemo(() => {
-    if (subTab !== 'hysa') return null;
+    if (subTab !== 'hysa' || usHysaRates.length === 0) return null;
     const sorted = [...usHysaRates].sort((a, b) => b.apy - a.apy);
     const best = sorted[0];
     const interest12m = amount * (best.apy / 100);
@@ -169,7 +174,7 @@ export function USCDTab() {
       interest12m,
       balance12m: amount + interest12m,
     };
-  }, [subTab, amount]);
+  }, [subTab, amount, usHysaRates]);
 
   const hysaComparison = useMemo(() => {
     const sorted = [...usHysaRates].sort((a, b) => b.apy - a.apy);
@@ -182,10 +187,18 @@ export function USCDTab() {
       fdicInsured: r.fdicInsured,
       rating: getRating(r.apy, bestApy),
     }));
-  }, [amount]);
+  }, [amount, usHysaRates]);
 
   const selectedBank = usCdRates.find((r) => r.institutionId === selectedInstitution);
   const availableTerms = selectedBank?.tenures.map((t) => t.months) || [];
+
+  if (isLoading && !rates) {
+    return (
+      <div className="premium-card p-6">
+        <p className="text-center text-muted-foreground py-8">Loading rates…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

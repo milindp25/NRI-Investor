@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { USCDRate, USHYSARate, BankFDRate } from '@/types';
-import usCdRatesData from '@/data/rates/us-cd-rates.json';
-import usHysaRatesData from '@/data/rates/us-hysa-rates.json';
-import indiaFdRatesData from '@/data/rates/india-fd-rates.json';
-
-const usCdRates = usCdRatesData as USCDRate[];
-const usHysaRates = usHysaRatesData as USHYSARate[];
-const indiaFdRates = indiaFdRatesData as BankFDRate[];
+import { useRates } from '@/lib/hooks/use-rates';
 
 function getRating(rate: number, bestRate: number): 'best' | 'good' | 'avg' {
   if (rate >= bestRate - 0.15) return 'best';
@@ -23,6 +16,11 @@ function RatingBadge({ rating }: { rating: 'best' | 'good' | 'avg' }) {
 }
 
 export function CompareTab() {
+  const { rates, isLoading } = useRates();
+  const usCdRates = rates?.usCDRates ?? [];
+  const usHysaRates = rates?.usHYSARates ?? [];
+  const indiaFdRates = rates?.indiaFDRates ?? [];
+
   const [tenureMonths, setTenureMonths] = useState(12);
   const [amountUSD, setAmountUSD] = useState(10000);
   const [exchangeRate] = useState(84.5);
@@ -130,7 +128,7 @@ export function CompareTab() {
       const effectiveRate = ((p.maturityUSD / amountUSD - 1) * 100) / (tenureMonths / 12);
       return { ...p, rating: getRating(effectiveRate, bestRate) };
     });
-  }, [tenureMonths, amountUSD, exchangeRate]);
+  }, [tenureMonths, amountUSD, exchangeRate, usCdRates, usHysaRates, indiaFdRates]);
 
   const productTypeColors: Record<string, string> = {
     'US CD': 'bg-[rgba(91,155,213,0.15)] text-info',
@@ -139,6 +137,14 @@ export function CompareTab() {
     'NRO FD': 'bg-[rgba(224,123,85,0.15)] text-warm',
     FCNR: 'bg-[rgba(124,108,212,0.15)] text-psu',
   };
+
+  if (isLoading && !rates) {
+    return (
+      <div className="premium-card p-6">
+        <p className="text-center text-muted-foreground py-8">Loading rates…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

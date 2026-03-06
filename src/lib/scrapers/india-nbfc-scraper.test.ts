@@ -1,17 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { scrapeIndiaNBFC } from './india-nbfc-scraper';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import * as cheerio from 'cheerio';
+import type { Browser } from 'puppeteer-core';
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('@/lib/scrapers/rate-store', () => ({
+vi.mock('./rate-store', () => ({
   mergeRates: vi.fn().mockResolvedValue({ merged: true }),
   getRates: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock('./browser', () => ({
+  fetchHtmlWithBrowser: vi.fn(),
+}));
+
+import { fetchHtmlWithBrowser } from './browser';
+
+const mockedFetchBrowser = fetchHtmlWithBrowser as Mock;
+
+const mockBrowser = {} as Browser;
+
 // ---------------------------------------------------------------------------
-// Mock HTML helpers
+// HTML fixtures
 // ---------------------------------------------------------------------------
 
 function makeNBFCTableHtml(rows: Array<{ tenure: string; rate: string }>): string {
@@ -40,45 +51,28 @@ const SHRIRAM_HTML = makeNBFCTableHtml([
   { tenure: '60 months', rate: '8.49%' },
 ]);
 
-function mockFetchAllSuccess() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockImplementation((url: string) => {
-      let html = BAJAJ_HTML;
-      if (url.includes('mahindra')) html = MAHINDRA_HTML;
-      if (url.includes('shriram')) html = SHRIRAM_HTML;
-
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        text: async () => html,
-      });
-    }),
-  );
+function mockAllSuccess() {
+  mockedFetchBrowser.mockImplementation((_browser: Browser, url: string) => {
+    let html = BAJAJ_HTML;
+    if (url.includes('mahindra')) html = MAHINDRA_HTML;
+    if (url.includes('shriram')) html = SHRIRAM_HTML;
+    return Promise.resolve(cheerio.load(html));
+  });
 }
 
-function mockFetchWithOneFailure() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockImplementation((url: string) => {
-      if (url.includes('mahindra')) {
-        return Promise.reject(new Error('Connection timeout'));
-      }
-
-      let html = BAJAJ_HTML;
-      if (url.includes('shriram')) html = SHRIRAM_HTML;
-
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        text: async () => html,
-      });
-    }),
-  );
+function mockWithOneFailure() {
+  mockedFetchBrowser.mockImplementation((_browser: Browser, url: string) => {
+    if (url.includes('mahindra')) {
+      return Promise.reject(new Error('Connection timeout'));
+    }
+    let html = BAJAJ_HTML;
+    if (url.includes('shriram')) html = SHRIRAM_HTML;
+    return Promise.resolve(cheerio.load(html));
+  });
 }
 
-function mockFetchAllFailure() {
-  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')));
+function mockAllFailure() {
+  mockedFetchBrowser.mockRejectedValue(new Error('Network failure'));
 }
 
 // ---------------------------------------------------------------------------
@@ -87,13 +81,14 @@ function mockFetchAllFailure() {
 
 describe('scrapeIndiaNBFC', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('parses NBFC rate table HTML correctly', async () => {
-    mockFetchAllSuccess();
+    mockAllSuccess();
 
-    const result = await scrapeIndiaNBFC();
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC(mockBrowser);
 
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(3);
@@ -116,9 +111,10 @@ describe('scrapeIndiaNBFC', () => {
   });
 
   it('includes static creditRating and minDeposit', async () => {
-    mockFetchAllSuccess();
+    mockAllSuccess();
 
-    const result = await scrapeIndiaNBFC();
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC(mockBrowser);
 
     const bajaj = result.data.find((d) => d.institutionId === 'bajaj-finance');
     expect(bajaj!.creditRating).toBe('AAA');
@@ -134,9 +130,10 @@ describe('scrapeIndiaNBFC', () => {
   });
 
   it('handles individual NBFC failure gracefully', async () => {
-    mockFetchWithOneFailure();
+    mockWithOneFailure();
 
-    const result = await scrapeIndiaNBFC();
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC(mockBrowser);
 
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(2);
@@ -145,9 +142,10 @@ describe('scrapeIndiaNBFC', () => {
   });
 
   it('returns partial results (2 of 3)', async () => {
-    mockFetchWithOneFailure();
+    mockWithOneFailure();
 
-    const result = await scrapeIndiaNBFC();
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC(mockBrowser);
 
     expect(result.data).toHaveLength(2);
     const ids = result.data.map((d) => d.institutionId);
@@ -157,26 +155,15 @@ describe('scrapeIndiaNBFC', () => {
   });
 
   it('validates rate bounds', async () => {
-    // Serve HTML with an unreasonable rate (25%)
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        text: async () =>
-          makeNBFCTableHtml([
-            { tenure: '12 months', rate: '25.00%' },
-            { tenure: '24 months', rate: '7.50%' },
-          ]),
-      }),
-    );
+    const unreasonableHtml = makeNBFCTableHtml([
+      { tenure: '12 months', rate: '25.00%' },
+      { tenure: '24 months', rate: '7.50%' },
+    ]);
+    mockedFetchBrowser.mockResolvedValue(cheerio.load(unreasonableHtml));
 
-    const result = await scrapeIndiaNBFC();
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC(mockBrowser);
 
-    // All 3 NBFCs get the same HTML — the 25% rate should still be picked
-    // since parseRate + isReasonableRate(rate, 0, 20) rejects it but the
-    // table parser uses isReasonableRate(rate, 0, 20). 25 > 20 so it's rejected.
-    // Only the 24-month 7.50% row should be parsed.
     for (const nbfc of result.data) {
       for (const tenure of nbfc.tenures) {
         expect(tenure.rate).toBeGreaterThanOrEqual(0);
@@ -186,13 +173,22 @@ describe('scrapeIndiaNBFC', () => {
   });
 
   it('returns success=false when all NBFCs fail', async () => {
-    mockFetchAllFailure();
+    mockAllFailure();
 
-    const result = await scrapeIndiaNBFC();
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC(mockBrowser);
 
     expect(result.success).toBe(false);
     expect(result.data).toHaveLength(0);
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.source).toBe('india-nbfc');
+  });
+
+  it('returns error when no browser provided', async () => {
+    const { scrapeIndiaNBFC } = await import('./india-nbfc-scraper');
+    const result = await scrapeIndiaNBFC();
+
+    expect(result.success).toBe(false);
+    expect(result.errors[0]).toContain('Browser instance required');
   });
 });

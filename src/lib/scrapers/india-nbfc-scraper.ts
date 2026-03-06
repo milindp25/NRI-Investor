@@ -1,8 +1,10 @@
 import * as cheerio from 'cheerio';
 import type { ScraperResult } from './types';
 import type { NBFCRate } from '@/types';
-import { fetchHtml, parseRate, isReasonableRate, todayISO } from './utils';
+import { parseRate, isReasonableRate, todayISO } from './utils';
 import { mergeRates } from './rate-store';
+import type { Browser } from './browser';
+import { fetchHtmlWithBrowser } from './browser';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -47,9 +49,6 @@ const STANDARD_TENURES = [12, 24, 36, 60];
 // Parsing helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Tenure alias patterns: maps common textual representations to months.
- */
 const TENURE_PATTERNS: Array<{ pattern: RegExp; months: number }> = [
   { pattern: /\b1\s*year\b/i, months: 12 },
   { pattern: /\b12\s*months?\b/i, months: 12 },
@@ -61,26 +60,17 @@ const TENURE_PATTERNS: Array<{ pattern: RegExp; months: number }> = [
   { pattern: /\b60\s*months?\b/i, months: 60 },
 ];
 
-/**
- * Try to extract a tenure in months from a cell's text.
- */
 function parseTenure(text: string): number | null {
   for (const { pattern, months } of TENURE_PATTERNS) {
     if (pattern.test(text)) return months;
   }
 
-  // Try parsing a raw number of months (e.g. "12", "24")
   const raw = parseInt(text.replace(/\D/g, ''), 10);
   if (!isNaN(raw) && STANDARD_TENURES.includes(raw)) return raw;
 
   return null;
 }
 
-/**
- * Generic table parser: scans all <table> elements in the page for rows
- * that contain a tenure string and a percentage rate.
- * Returns an array of { months, rate } for our standard tenures.
- */
 function parseRateTable($: cheerio.CheerioAPI): Array<{ months: number; rate: number }> {
   const found = new Map<number, number>();
 
@@ -88,7 +78,6 @@ function parseRateTable($: cheerio.CheerioAPI): Array<{ months: number; rate: nu
     const cells = $(row).find('td, th');
     if (cells.length < 2) return;
 
-    // Try to find a tenure in any cell, and a rate in any other cell
     let tenureMonths: number | null = null;
     let bestRate: number | null = null;
 
@@ -121,8 +110,10 @@ function parseRateTable($: cheerio.CheerioAPI): Array<{ months: number; rate: nu
 // Scraper
 // ---------------------------------------------------------------------------
 
-async function scrapeOne(config: NBFCConfig): Promise<NBFCRate> {
-  const $ = await fetchHtml(config.url);
+async function scrapeOne(config: NBFCConfig, browser: Browser): Promise<NBFCRate> {
+  const $ = await fetchHtmlWithBrowser(browser, config.url, {
+    waitMs: 4000,
+  });
   const tenures = parseRateTable($);
 
   if (tenures.length === 0) {
@@ -139,11 +130,23 @@ async function scrapeOne(config: NBFCConfig): Promise<NBFCRate> {
   };
 }
 
-export async function scrapeIndiaNBFC(): Promise<ScraperResult<NBFCRate>> {
+export async function scrapeIndiaNBFC(browser?: Browser | null): Promise<ScraperResult<NBFCRate>> {
+  if (!browser) {
+    return {
+      success: false,
+      data: [],
+      errors: ['Browser instance required for India NBFC scraper (all sites are SPAs/blocked)'],
+      scrapedAt: new Date().toISOString(),
+      source: 'india-nbfc',
+    };
+  }
+
   const errors: string[] = [];
   const data: NBFCRate[] = [];
 
-  const results = await Promise.allSettled(NBFC_CONFIGS.map((config) => scrapeOne(config)));
+  const results = await Promise.allSettled(
+    NBFC_CONFIGS.map((config) => scrapeOne(config, browser)),
+  );
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];

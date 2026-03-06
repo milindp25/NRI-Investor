@@ -1,16 +1,37 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import * as cheerio from 'cheerio';
 import type { USHYSARate } from '@/types';
+import type { Browser } from 'puppeteer-core';
 
 // ---------------------------------------------------------------------------
-// Mocks — must be set up before importing the module under test
+// Mocks
 // ---------------------------------------------------------------------------
 
 vi.mock('./rate-store', () => ({
   mergeRates: vi.fn().mockResolvedValue({ merged: true }),
 }));
 
-// We do NOT mock ./utils so that parseRate / isReasonableRate / todayISO run
-// for real. We only stub global fetch to control the HTML returned by fetchHtml.
+vi.mock('./browser', () => ({
+  fetchHtmlWithBrowser: vi.fn(),
+}));
+
+// Partial mock of ./utils: keep parseRate / isReasonableRate / todayISO real,
+// only stub fetchHtml (used by non-browser institutions).
+vi.mock('./utils', async () => {
+  const actual = await vi.importActual<typeof import('./utils')>('./utils');
+  return {
+    ...actual,
+    fetchHtml: vi.fn(),
+  };
+});
+
+import { fetchHtmlWithBrowser } from './browser';
+import { fetchHtml } from './utils';
+
+const mockedFetchBrowser = fetchHtmlWithBrowser as Mock;
+const mockedFetchHtml = fetchHtml as Mock;
+
+const mockBrowser = {} as Browser;
 
 // ---------------------------------------------------------------------------
 // HTML fixtures
@@ -34,34 +55,26 @@ function makeHYSAPageBodyText(bodyContent: string): string {
   return `<html><body>${bodyContent}</body></html>`;
 }
 
-function mockFetchOk(html: string) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    text: () => Promise.resolve(html),
-  });
-}
-
-function mockFetchFail() {
-  return vi.fn().mockRejectedValue(new Error('Network error'));
+/** Mock both browser-based and fetch-based paths to return the same HTML. */
+function mockAllSuccess(html: string) {
+  mockedFetchBrowser.mockResolvedValue(cheerio.load(html));
+  mockedFetchHtml.mockResolvedValue(cheerio.load(html));
 }
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('scrapeUSHYSA', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
-  // 1. Parses HTML correctly -> valid output
+describe('scrapeUSHYSA', () => {
   it('parses a page with a clear APY value in a matching selector', async () => {
-    vi.stubGlobal('fetch', mockFetchOk(makeHYSAPage('4.25% APY')));
+    mockAllSuccess(makeHYSAPage('4.25% APY'));
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
     expect(result.success).toBe(true);
     expect(result.source).toBe('us-hysa');
@@ -71,60 +84,51 @@ describe('scrapeUSHYSA', () => {
     expect(first.apy).toBe(4.25);
     expect(first.fdicInsured).toBe(true);
     expect(first.lastUpdated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-
-    vi.unstubAllGlobals();
   });
 
-  // 2. Handles empty/broken HTML gracefully
   it('returns errors but does not throw on empty HTML', async () => {
-    vi.stubGlobal('fetch', mockFetchOk('<html><body></body></html>'));
+    mockAllSuccess('<html><body></body></html>');
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
-    // All institutions should fail to find an APY
     expect(result.data).toHaveLength(0);
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.success).toBe(false);
-
-    vi.unstubAllGlobals();
   });
 
-  // 3. Rejects unreasonable rates
   it('ignores rates outside the 0-15 reasonable range', async () => {
-    // A page that displays 99.99% — should be rejected
-    vi.stubGlobal('fetch', mockFetchOk(makeHYSAPage('99.99% APY')));
+    mockAllSuccess(makeHYSAPage('99.99% APY'));
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
     expect(result.data).toHaveLength(0);
     expect(result.errors.length).toBeGreaterThan(0);
-
-    vi.unstubAllGlobals();
   });
 
-  // 4. Returns partial results when some institutions fail
   it('succeeds partially when some fetches fail and others succeed', async () => {
     const goodHtml = makeHYSAPage('4.50% APY');
+    const good$ = cheerio.load(goodHtml);
 
-    // First 4 URLs succeed, last 2 fail (network error)
-    const fetchImpl = vi.fn().mockImplementation((url: string) => {
-      // Simulate failure for the last two institutions (Discover, Betterment)
-      if (url.includes('discover.com') || url.includes('betterment.com')) {
+    // Browser path: Marcus succeeds, Discover fails
+    mockedFetchBrowser.mockImplementation((_browser: Browser, url: string) => {
+      if (url.includes('discover.com')) {
         return Promise.reject(new Error('Network error'));
       }
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        text: () => Promise.resolve(goodHtml),
-      });
+      return Promise.resolve(good$);
     });
-    vi.stubGlobal('fetch', fetchImpl);
+
+    // Fetch path: Ally, Wealthfront, SoFi succeed, Betterment fails
+    mockedFetchHtml.mockImplementation((url: string) => {
+      if (url.includes('betterment.com')) {
+        return Promise.reject(new Error('Network error'));
+      }
+      return Promise.resolve(good$);
+    });
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
     // 4 out of 6 should succeed
     expect(result.success).toBe(true);
@@ -132,33 +136,26 @@ describe('scrapeUSHYSA', () => {
     expect(result.errors.length).toBe(2);
     expect(result.errors.some((e) => e.includes('Discover'))).toBe(true);
     expect(result.errors.some((e) => e.includes('Betterment'))).toBe(true);
-
-    vi.unstubAllGlobals();
   });
 
-  // 5. Calls mergeRates with correct args
   it('calls mergeRates with key, data, minimum, and idField', async () => {
-    vi.stubGlobal('fetch', mockFetchOk(makeHYSAPage('4.25% APY')));
+    mockAllSuccess(makeHYSAPage('4.25% APY'));
 
-    // Re-import to pick up the fresh mock
     const rateStoreMod = await import('./rate-store');
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
 
-    await scrapeUSHYSA();
+    await scrapeUSHYSA(mockBrowser);
 
     expect(rateStoreMod.mergeRates).toHaveBeenCalledWith(
       'rates:us-hysa',
       expect.arrayContaining([
         expect.objectContaining({ institutionId: expect.any(String), apy: 4.25 }),
       ]),
-      4, // minimum institutions
+      4,
       'institutionId',
     );
-
-    vi.unstubAllGlobals();
   });
 
-  // Additional: parses APY from body text regex fallback
   it('extracts APY via regex fallback when no CSS selector matches', async () => {
     const html = makeHYSAPageBodyText(`
       <div>
@@ -166,23 +163,21 @@ describe('scrapeUSHYSA', () => {
         <p>Earn a competitive 3.90% APY on your savings.</p>
       </div>
     `);
-    vi.stubGlobal('fetch', mockFetchOk(html));
+    mockedFetchBrowser.mockResolvedValue(cheerio.load(html));
+    mockedFetchHtml.mockResolvedValue(cheerio.load(html));
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
     expect(result.data.length).toBeGreaterThan(0);
     expect(result.data[0].apy).toBe(3.9);
-
-    vi.unstubAllGlobals();
   });
 
-  // Additional: all institutions appear in data when all succeed
   it('returns all 6 institutions when every fetch succeeds', async () => {
-    vi.stubGlobal('fetch', mockFetchOk(makeHYSAPage('4.00% APY')));
+    mockAllSuccess(makeHYSAPage('4.00% APY'));
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
     expect(result.data).toHaveLength(6);
     const ids = result.data.map((d: USHYSARate) => d.institutionId);
@@ -192,21 +187,17 @@ describe('scrapeUSHYSA', () => {
     expect(ids).toContain('sofi');
     expect(ids).toContain('discover-bank');
     expect(ids).toContain('betterment');
-
-    vi.unstubAllGlobals();
   });
 
-  // Additional: total network failure
   it('returns success false when all fetches fail', async () => {
-    vi.stubGlobal('fetch', mockFetchFail());
+    mockedFetchBrowser.mockRejectedValue(new Error('Network error'));
+    mockedFetchHtml.mockRejectedValue(new Error('Network error'));
 
     const { scrapeUSHYSA } = await import('./us-hysa-scraper');
-    const result = await scrapeUSHYSA();
+    const result = await scrapeUSHYSA(mockBrowser);
 
     expect(result.success).toBe(false);
     expect(result.data).toHaveLength(0);
     expect(result.errors).toHaveLength(6);
-
-    vi.unstubAllGlobals();
   });
 });

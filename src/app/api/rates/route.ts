@@ -105,8 +105,8 @@ export async function GET(
       );
     }
 
-    // Fetch from KV (falls back to static JSON if KV not configured)
-    const all = await getAllRates();
+    // Fetch from blob (falls back to static JSON per key)
+    const { directory: all, sources } = await getAllRates();
     let data: RateDirectory | Partial<RateDirectory>;
 
     if (type) {
@@ -123,7 +123,7 @@ export async function GET(
       data,
       meta: {
         lastUpdated: new Date().toISOString(),
-        source: process.env.BLOB_READ_WRITE_TOKEN ? 'blob' : 'static',
+        sources,
       },
     });
   } catch (error) {

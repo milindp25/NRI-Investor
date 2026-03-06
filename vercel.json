@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "src/app/api/admin/refresh-rates/route.ts": {
+      "memory": 1536
+    }
+  },
   "crons": [
     {
       "path": "/api/admin/refresh-rates",

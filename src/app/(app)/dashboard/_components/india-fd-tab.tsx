@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { BankFDRate } from '@/types';
-import indiaFdRatesData from '@/data/rates/india-fd-rates.json';
+import { useRates } from '@/lib/hooks/use-rates';
 import { calculateFDMaturity } from '@/lib/calculations/fd-calculator';
-
-const indiaFdRates = indiaFdRatesData as BankFDRate[];
 
 const PSU_BANKS = ['sbi', 'pnb', 'bank-of-baroda', 'canara-bank'];
 
@@ -52,6 +49,9 @@ function TypeBadge({ isPSU }: { isPSU: boolean }) {
 }
 
 export function IndiaFDTab() {
+  const { rates, isLoading } = useRates();
+  const indiaFdRates = rates?.indiaFDRates ?? [];
+
   const [amountUSD, setAmountUSD] = useState(10000);
   const [fdType, setFdType] = useState<FDType>('NRE');
   const [selectedTenureMonths, setSelectedTenureMonths] = useState(24);
@@ -60,13 +60,9 @@ export function IndiaFDTab() {
   // Filter rates by account type
   const filteredRates = useMemo(() => {
     return indiaFdRates.filter((r) => r.accountType === fdType);
-  }, [fdType]);
+  }, [fdType, indiaFdRates]);
 
-  const [selectedInstitution, setSelectedInstitution] = useState(
-    filteredRates.find((r) => r.institutionId === 'yes-bank')?.institutionId ||
-      filteredRates[0]?.institutionId ||
-      '',
-  );
+  const [selectedInstitution, setSelectedInstitution] = useState('yes-bank');
 
   // Update selected institution when fdType changes if current selection is not valid
   const validInstitution = useMemo(() => {
@@ -184,6 +180,14 @@ export function IndiaFDTab() {
 
     return periods;
   }, [selectedResult, selectedTenureMonths, principalINR, fdType]);
+
+  if (isLoading && !rates) {
+    return (
+      <div className="premium-card p-6">
+        <p className="text-center text-muted-foreground py-8">Loading rates…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,5 @@
 import type { ScraperResult, ScraperType } from './types';
+import type { Browser } from './browser';
 import { scrapeUSTreasury } from './us-treasury-scraper';
 import { scrapeUSMoneyMarket } from './us-money-market-scraper';
 import { scrapeUSHYSA } from './us-hysa-scraper';
@@ -7,19 +8,24 @@ import { scrapeIndiaFD } from './india-fd-scraper';
 import { scrapeIndiaNBFC } from './india-nbfc-scraper';
 import { scrapeIndiaGovt } from './india-govt-scraper';
 
-const SCRAPER_MAP: Record<ScraperType, () => Promise<ScraperResult<unknown>>> = {
-  'us-treasury': scrapeUSTreasury,
-  'us-money-market': scrapeUSMoneyMarket,
-  'us-hysa': scrapeUSHYSA,
-  'us-cd': scrapeUSCD,
-  'india-fd': scrapeIndiaFD,
-  'india-nbfc': scrapeIndiaNBFC,
-  'india-govt': scrapeIndiaGovt,
+type ScraperFn = (browser?: Browser | null) => Promise<ScraperResult<unknown>>;
+
+const SCRAPER_MAP: Record<ScraperType, ScraperFn> = {
+  'us-treasury': scrapeUSTreasury as ScraperFn,
+  'us-money-market': scrapeUSMoneyMarket as ScraperFn,
+  'us-hysa': scrapeUSHYSA as ScraperFn,
+  'us-cd': scrapeUSCD as ScraperFn,
+  'india-fd': scrapeIndiaFD as ScraperFn,
+  'india-nbfc': scrapeIndiaNBFC as ScraperFn,
+  'india-govt': scrapeIndiaGovt as ScraperFn,
 };
 
 export const VALID_SCRAPER_TYPES: ScraperType[] = Object.keys(SCRAPER_MAP) as ScraperType[];
 
-export async function runScraper(type: ScraperType): Promise<ScraperResult<unknown>> {
+export async function runScraper(
+  type: ScraperType,
+  browser?: Browser | null,
+): Promise<ScraperResult<unknown>> {
   const scraper = SCRAPER_MAP[type];
   if (!scraper) {
     return {
@@ -30,19 +36,18 @@ export async function runScraper(type: ScraperType): Promise<ScraperResult<unkno
       source: type,
     };
   }
-  return scraper();
+  return scraper(browser);
 }
 
-export async function runAllScrapers(): Promise<Record<ScraperType, ScraperResult<unknown>>> {
-  const entries = Object.entries(SCRAPER_MAP) as [
-    ScraperType,
-    () => Promise<ScraperResult<unknown>>,
-  ][];
+export async function runAllScrapers(
+  browser?: Browser | null,
+): Promise<Record<ScraperType, ScraperResult<unknown>>> {
+  const entries = Object.entries(SCRAPER_MAP) as [ScraperType, ScraperFn][];
 
   const results = await Promise.allSettled(
     entries.map(async ([type, scraper]) => {
       try {
-        return { type, result: await scraper() };
+        return { type, result: await scraper(browser) };
       } catch (err) {
         return {
           type,

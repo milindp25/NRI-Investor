@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import * as cheerio from 'cheerio';
+import type { Browser } from 'puppeteer-core';
 
 import {
   parseTenureText,
@@ -16,6 +17,10 @@ vi.mock('./rate-store', () => ({
   mergeRates: vi.fn().mockResolvedValue({ merged: true }),
 }));
 
+vi.mock('./browser', () => ({
+  fetchHtmlWithBrowser: vi.fn(),
+}));
+
 // Mock fetchHtml from utils — we control the HTML each bank "returns"
 vi.mock('./utils', async () => {
   const actual = await vi.importActual<typeof import('./utils')>('./utils');
@@ -26,10 +31,14 @@ vi.mock('./utils', async () => {
 });
 
 import { fetchHtml } from './utils';
+import { fetchHtmlWithBrowser } from './browser';
 import { mergeRates } from './rate-store';
 
 const mockedFetchHtml = fetchHtml as Mock;
+const mockedFetchBrowser = fetchHtmlWithBrowser as Mock;
 const mockedMergeRates = mergeRates as Mock;
+
+const mockBrowser = {} as Browser;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -51,18 +60,27 @@ function loadCheerio(html: string): cheerio.CheerioAPI {
   return cheerio.load(html);
 }
 
-/** Make fetchHtml resolve with a cheerio-loaded HTML string for every call. */
+/** Make both fetch paths resolve with the same cheerio-loaded HTML. */
 function mockAllBanksSuccess(html: string = VALID_RATE_TABLE_HTML): void {
   mockedFetchHtml.mockResolvedValue(loadCheerio(html));
+  mockedFetchBrowser.mockResolvedValue(loadCheerio(html));
 }
 
-/** Make fetchHtml fail for `failCount` banks, succeed for the rest. */
-function mockPartialFailure(failCount: number, html: string = VALID_RATE_TABLE_HTML): void {
-  let callIndex = 0;
-  mockedFetchHtml.mockImplementation(() => {
-    callIndex++;
-    if (callIndex <= failCount) {
-      return Promise.reject(new Error(`Bank ${callIndex} fetch failed`));
+/**
+ * Fail specific banks by URL pattern, succeed for the rest.
+ * Uses URL-based matching to work with both fetchHtml and fetchHtmlWithBrowser.
+ */
+function mockBankFailures(failUrls: string[], html: string = VALID_RATE_TABLE_HTML): void {
+  mockedFetchHtml.mockImplementation((url: string) => {
+    if (failUrls.some((u) => url.includes(u))) {
+      return Promise.reject(new Error('fetch failed'));
+    }
+    return Promise.resolve(loadCheerio(html));
+  });
+
+  mockedFetchBrowser.mockImplementation((_browser: Browser, url: string) => {
+    if (failUrls.some((u) => url.includes(u))) {
+      return Promise.reject(new Error('fetch failed'));
     }
     return Promise.resolve(loadCheerio(html));
   });
@@ -242,7 +260,7 @@ describe('scrapeIndiaFD', () => {
   it('generates both NRE and NRO entries per bank', async () => {
     mockAllBanksSuccess();
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
 
     expect(result.success).toBe(true);
     // 10 banks x 2 account types = 20 records
@@ -257,7 +275,7 @@ describe('scrapeIndiaFD', () => {
   it('populates institution, institutionId, and lastUpdated fields', async () => {
     mockAllBanksSuccess();
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
     const sbiNRE = result.data.find((r) => r.institutionId === 'sbi' && r.accountType === 'NRE');
 
     expect(sbiNRE).toBeDefined();
@@ -269,7 +287,7 @@ describe('scrapeIndiaFD', () => {
   it('includes correct tenure data from parsed HTML', async () => {
     mockAllBanksSuccess();
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
     const entry = result.data[0];
 
     expect(entry.tenures).toEqual([
@@ -281,9 +299,10 @@ describe('scrapeIndiaFD', () => {
   });
 
   it('handles partial failures gracefully (7/10 banks succeed)', async () => {
-    mockPartialFailure(3);
+    // Fail SBI (fetchHtml), HDFC (browser), ICICI (browser) = 3 failures
+    mockBankFailures(['sbi.co.in', 'hdfcbank.com', 'icicibank.com']);
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
 
     expect(result.success).toBe(true);
     // 7 successful banks x 2 account types = 14 records
@@ -294,8 +313,9 @@ describe('scrapeIndiaFD', () => {
 
   it('returns success:false when all banks fail', async () => {
     mockedFetchHtml.mockRejectedValue(new Error('Network down'));
+    mockedFetchBrowser.mockRejectedValue(new Error('Network down'));
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
 
     expect(result.success).toBe(false);
     expect(result.data).toHaveLength(0);
@@ -303,9 +323,11 @@ describe('scrapeIndiaFD', () => {
   });
 
   it('handles banks returning HTML with no rate tables', async () => {
-    mockedFetchHtml.mockResolvedValue(loadCheerio('<html><body><p>Coming soon</p></body></html>'));
+    const empty$ = loadCheerio('<html><body><p>Coming soon</p></body></html>');
+    mockedFetchHtml.mockResolvedValue(empty$);
+    mockedFetchBrowser.mockResolvedValue(empty$);
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
 
     // All banks parsed but found no data -> errors for each bank
     expect(result.data).toHaveLength(0);
@@ -318,7 +340,7 @@ describe('scrapeIndiaFD', () => {
   it('calls mergeRates with correct key and minRecords', async () => {
     mockAllBanksSuccess();
 
-    await scrapeIndiaFD();
+    await scrapeIndiaFD(mockBrowser);
 
     expect(mockedMergeRates).toHaveBeenCalledTimes(1);
     expect(mockedMergeRates).toHaveBeenCalledWith(
@@ -340,7 +362,7 @@ describe('scrapeIndiaFD', () => {
       reason: 'Only 4 records (minimum: 10). Preserving existing data.',
     });
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
 
     expect(result.errors).toContain('Only 4 records (minimum: 10). Preserving existing data.');
   });
@@ -348,7 +370,7 @@ describe('scrapeIndiaFD', () => {
   it('sets source to "india-fd" and includes scrapedAt timestamp', async () => {
     mockAllBanksSuccess();
 
-    const result = await scrapeIndiaFD();
+    const result = await scrapeIndiaFD(mockBrowser);
 
     expect(result.source).toBe('india-fd');
     expect(result.scrapedAt).toBeTruthy();

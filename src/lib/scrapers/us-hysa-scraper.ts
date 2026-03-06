@@ -4,6 +4,8 @@ import type { ScraperResult } from './types';
 import type { USHYSARate } from '@/types';
 import { fetchHtml, parseRate, isReasonableRate, todayISO } from './utils';
 import { mergeRates } from './rate-store';
+import type { Browser } from './browser';
+import { fetchHtmlWithBrowser } from './browser';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -16,6 +18,7 @@ interface HYSAConfig {
   minBalance: number;
   fdicInsured: boolean;
   selectors: string[]; // CSS selectors to try for APY value
+  usesBrowser: boolean; // true = needs headless Chrome (SPA/bot-blocked)
 }
 
 const HYSA_CONFIGS: HYSAConfig[] = [
@@ -26,6 +29,7 @@ const HYSA_CONFIGS: HYSAConfig[] = [
     minBalance: 0,
     fdicInsured: true,
     selectors: ['[data-apy]', '.apy-rate', '.rate-value', '.savings-rate', '.apy'],
+    usesBrowser: false,
   },
   {
     institution: 'Marcus by Goldman Sachs',
@@ -34,6 +38,7 @@ const HYSA_CONFIGS: HYSAConfig[] = [
     minBalance: 0,
     fdicInsured: true,
     selectors: ['.rate-value', '.apy-value', '[data-rate]', '.hero-rate', '.savings-apy'],
+    usesBrowser: true, // 403 with plain fetch
   },
   {
     institution: 'Wealthfront',
@@ -42,6 +47,7 @@ const HYSA_CONFIGS: HYSAConfig[] = [
     minBalance: 0,
     fdicInsured: true,
     selectors: ['.apy', '.rate', '[data-apy]', '.cash-rate', '.yield-value'],
+    usesBrowser: false,
   },
   {
     institution: 'SoFi',
@@ -50,6 +56,7 @@ const HYSA_CONFIGS: HYSAConfig[] = [
     minBalance: 0,
     fdicInsured: true,
     selectors: ['.rate-value', '.apy-rate', '[data-apy]', '.savings-rate', '.apy'],
+    usesBrowser: false,
   },
   {
     institution: 'Discover Bank',
@@ -58,6 +65,7 @@ const HYSA_CONFIGS: HYSAConfig[] = [
     minBalance: 0,
     fdicInsured: true,
     selectors: ['.rate-apy', '.apy-value', '[data-rate]', '.savings-rate', '.rate'],
+    usesBrowser: true, // SPA
   },
   {
     institution: 'Betterment',
@@ -66,6 +74,7 @@ const HYSA_CONFIGS: HYSAConfig[] = [
     minBalance: 0,
     fdicInsured: true,
     selectors: ['.apy', '.rate-value', '[data-apy]', '.cash-apy', '.yield'],
+    usesBrowser: false,
   },
 ];
 
@@ -144,8 +153,15 @@ function extractAPY($: cheerio.CheerioAPI, selectors: string[]): number | null {
 // Scraper
 // ---------------------------------------------------------------------------
 
-async function scrapeOne(config: HYSAConfig): Promise<USHYSARate> {
-  const $ = await fetchHtml(config.url);
+async function scrapeOne(config: HYSAConfig, browser: Browser | null): Promise<USHYSARate> {
+  let $: cheerio.CheerioAPI;
+
+  if (config.usesBrowser && browser) {
+    $ = await fetchHtmlWithBrowser(browser, config.url, { waitMs: 4000 });
+  } else {
+    $ = await fetchHtml(config.url);
+  }
+
   const apy = extractAPY($, config.selectors);
 
   if (apy === null) {
@@ -162,11 +178,13 @@ async function scrapeOne(config: HYSAConfig): Promise<USHYSARate> {
   };
 }
 
-export async function scrapeUSHYSA(): Promise<ScraperResult<USHYSARate>> {
+export async function scrapeUSHYSA(browser?: Browser | null): Promise<ScraperResult<USHYSARate>> {
   const errors: string[] = [];
   const data: USHYSARate[] = [];
 
-  const results = await Promise.allSettled(HYSA_CONFIGS.map((config) => scrapeOne(config)));
+  const results = await Promise.allSettled(
+    HYSA_CONFIGS.map((config) => scrapeOne(config, browser ?? null)),
+  );
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];

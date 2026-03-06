@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runScraper, runAllScrapers, VALID_SCRAPER_TYPES } from '@/lib/scrapers';
 import type { ScraperType } from '@/lib/scrapers/types';
+import { launchBrowser } from '@/lib/scrapers/browser';
 
 export const maxDuration = 60;
 
@@ -27,8 +28,12 @@ export async function POST(request: NextRequest) {
   }
 
   const type = request.nextUrl.searchParams.get('type');
+  let browser = null;
 
   try {
+    // Launch headless browser for scrapers that need it
+    browser = await launchBrowser();
+
     if (type) {
       if (!VALID_SCRAPER_TYPES.includes(type as ScraperType)) {
         return NextResponse.json(
@@ -40,11 +45,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const result = await runScraper(type as ScraperType);
+      const result = await runScraper(type as ScraperType, browser);
       return NextResponse.json({ data: { [type]: result } });
     }
 
-    const results = await runAllScrapers();
+    const results = await runAllScrapers(browser);
 
     const summary = Object.entries(results).map(([key, val]) => ({
       type: key,
@@ -63,5 +68,9 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 },
     );
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
   }
 }

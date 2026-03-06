@@ -143,7 +143,7 @@ export function FDCharts({ comparison }: FDChartsProps) {
       const afterTaxValue = indiaInput.principal + interestPortion * (1 - taxRatio);
       // Apply forex depreciation
       const forexFactor = Math.pow(1 + annualDepreciation, years);
-      const indiaValueUSD = (afterTaxValue / exchangeRate) * forexFactor;
+      const indiaValueUSD = (afterTaxValue / comparison.exchangeRateUsed.rate) * forexFactor;
 
       // Abroad: compound growth with effective rate
       const abroadGrowthFactor = Math.pow(
@@ -172,7 +172,7 @@ export function FDCharts({ comparison }: FDChartsProps) {
       const taxRatio = india.taxDeducted > 0 ? india.taxDeducted / india.totalInterest : 0;
       const afterTaxValue = indiaInput.principal + interestPortion * (1 - taxRatio);
       const forexFactor = Math.pow(1 + annualDepreciation, years);
-      const indiaValueUSD = (afterTaxValue / exchangeRate) * forexFactor;
+      const indiaValueUSD = (afterTaxValue / comparison.exchangeRateUsed.rate) * forexFactor;
 
       const abroadGrowthFactor = Math.pow(
         1 + abroadInput.interestRateAnnual / 100 / abroadPeriodsPerYear,

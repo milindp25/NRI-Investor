@@ -2,8 +2,10 @@ import * as cheerio from 'cheerio';
 
 import type { ScraperResult } from './types';
 import type { USCDRate } from '@/types';
-import { fetchHtml, parseRate, isReasonableRate, todayISO } from './utils';
+import { parseRate, isReasonableRate, todayISO } from './utils';
 import { mergeRates } from './rate-store';
+import type { Browser } from './browser';
+import { fetchHtmlWithBrowser } from './browser';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -257,8 +259,10 @@ function extractCDRates(
 // Scraper
 // ---------------------------------------------------------------------------
 
-async function scrapeOne(config: CDConfig): Promise<USCDRate> {
-  const $ = await fetchHtml(config.url);
+async function scrapeOne(config: CDConfig, browser: Browser): Promise<USCDRate> {
+  const $ = await fetchHtmlWithBrowser(browser, config.url, {
+    waitMs: 4000,
+  });
   const tenures = extractCDRates($, config.tableSelectors);
 
   if (tenures.length === 0) {
@@ -277,11 +281,21 @@ async function scrapeOne(config: CDConfig): Promise<USCDRate> {
   };
 }
 
-export async function scrapeUSCD(): Promise<ScraperResult<USCDRate>> {
+export async function scrapeUSCD(browser?: Browser | null): Promise<ScraperResult<USCDRate>> {
+  if (!browser) {
+    return {
+      success: false,
+      data: [],
+      errors: ['Browser instance required for US CD scraper (all banks are SPAs)'],
+      scrapedAt: new Date().toISOString(),
+      source: 'us-cd',
+    };
+  }
+
   const errors: string[] = [];
   const data: USCDRate[] = [];
 
-  const results = await Promise.allSettled(CD_CONFIGS.map((config) => scrapeOne(config)));
+  const results = await Promise.allSettled(CD_CONFIGS.map((config) => scrapeOne(config, browser)));
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
