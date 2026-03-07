@@ -157,7 +157,7 @@ async function scrapeOne(config: HYSAConfig, browser: Browser | null): Promise<U
   let $: cheerio.CheerioAPI;
 
   if (config.usesBrowser && browser) {
-    $ = await fetchHtmlWithBrowser(browser, config.url, { waitMs: 4000 });
+    $ = await fetchHtmlWithBrowser(browser, config.url, { waitMs: 2000 });
   } else {
     $ = await fetchHtml(config.url);
   }

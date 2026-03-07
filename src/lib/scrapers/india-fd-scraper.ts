@@ -214,7 +214,7 @@ async function scrapeBank(
     let $: cheerio.CheerioAPI;
 
     if (config.usesBrowser && browser) {
-      $ = await fetchHtmlWithBrowser(browser, config.url, { waitMs: 4000 });
+      $ = await fetchHtmlWithBrowser(browser, config.url, { waitMs: 2000 });
     } else {
       $ = await fetchHtml(config.url);
     }
@@ -255,20 +255,26 @@ export async function scrapeIndiaFD(browser?: Browser | null): Promise<ScraperRe
   const today = todayISO();
   const errors: string[] = [];
 
-  const results = await Promise.allSettled(
-    BANK_CONFIGS.map((config) => scrapeBank(config, today, browser ?? null)),
-  );
-
   const allRates: BankFDRate[] = [];
 
-  for (const result of results) {
-    if (result.status === 'fulfilled') {
-      if (result.value.error) {
-        errors.push(result.value.error);
+  // Process banks in batches of 3 to avoid exhausting memory with too many
+  // concurrent Chromium tabs on Vercel's 1.5GB serverless functions.
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < BANK_CONFIGS.length; i += BATCH_SIZE) {
+    const batch = BANK_CONFIGS.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((config) => scrapeBank(config, today, browser ?? null)),
+    );
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        if (result.value.error) {
+          errors.push(result.value.error);
+        }
+        allRates.push(...result.value.data);
+      } else {
+        errors.push(result.reason instanceof Error ? result.reason.message : String(result.reason));
       }
-      allRates.push(...result.value.data);
-    } else {
-      errors.push(result.reason instanceof Error ? result.reason.message : String(result.reason));
     }
   }
 

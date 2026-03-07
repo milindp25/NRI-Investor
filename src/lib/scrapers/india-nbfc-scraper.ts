@@ -112,7 +112,7 @@ function parseRateTable($: cheerio.CheerioAPI): Array<{ months: number; rate: nu
 
 async function scrapeOne(config: NBFCConfig, browser: Browser): Promise<NBFCRate> {
   const $ = await fetchHtmlWithBrowser(browser, config.url, {
-    waitMs: 4000,
+    waitMs: 2000,
   });
   const tenures = parseRateTable($);
 
